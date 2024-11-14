@@ -1,3 +1,6 @@
 ios/Flutter
 android/gradle
 *.iml
+linux
+macos
+windows
