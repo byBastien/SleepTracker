@@ -37,7 +37,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final int _stress = 5;
   final int _environment = 5;
 
-  final FuzzyLogic fuzzyLogic = FuzzyLogic(); // Create an instance of FuzzyLogic
+  final PythonFuzzyAPI fuzzyLogic = PythonFuzzyAPI(
+      'http://127.0.0.1:8000'); // Create an instance of FuzzyLogic
 
   void _showRatingDialog() {
     int tempDuration = _duration;
@@ -86,10 +87,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop();
 
-                    double sleepQuality = fuzzyLogic.computeSleepQuality(
+                    double sleepQuality = await fuzzyLogic.computeSleepQuality(
                       tempRhythm.toDouble(),
                       tempStress.toDouble(),
                       tempDuration.toDouble(),
@@ -106,12 +107,15 @@ class _MyHomePageState extends State<MyHomePage> {
                           stress: tempStress,
                           environment: tempEnvironment,
                           date: DateTime.now(),
-                          sleepQuality: sleepQuality, // Assign the computed quality
+                          sleepQuality:
+                              sleepQuality, // Assign the computed quality
                         ),
                       );
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Predicted Sleep Quality: $sleepQuality')),
+                        SnackBar(
+                            content:
+                                Text('Predicted Sleep Quality: $sleepQuality')),
                       );
                     });
                   },
@@ -209,7 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(width: 8),
                 Text(
                   '${averageSleepQuality.toStringAsFixed(2)} ($qualityLabel)',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -241,7 +246,8 @@ class _MyHomePageState extends State<MyHomePage> {
       itemCount: _sleepHistory.length,
       itemBuilder: (context, index) {
         final sleepRating = _sleepHistory[index];
-        String qualityLabel = _getSleepQualityLabel(sleepRating.sleepQuality); // Get the quality label
+        String qualityLabel = _getSleepQualityLabel(
+            sleepRating.sleepQuality); // Get the quality label
 
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -256,7 +262,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 Text('Rhythm: ${sleepRating.rhythm}'),
                 Text('Stress: ${sleepRating.stress}'),
                 Text('Environment: ${sleepRating.environment}'),
-                Text('Sleep Quality: ${sleepRating.sleepQuality.toStringAsFixed(2)} ($qualityLabel)'), // Display quality with label
+                Text(
+                    'Sleep Quality: ${sleepRating.sleepQuality.toStringAsFixed(2)} ($qualityLabel)'), // Display quality with label
               ],
             ),
           ),
