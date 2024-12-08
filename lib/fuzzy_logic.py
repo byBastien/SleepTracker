@@ -21,7 +21,7 @@ rhythm_ctrl = ctrl.Antecedent(np.arange(0, 11, 1), 'rhythm')
 stress_ctrl = ctrl.Antecedent(np.arange(0, 11, 1), 'stress')
 duration_ctrl = ctrl.Antecedent(np.arange(0, 11, 1), 'duration')
 environment_ctrl = ctrl.Antecedent(np.arange(0, 11, 1), 'environment')
-sleep_quality_ctrl = ctrl.Consequent(np.arange(0, 11, 1), 'sleep_quality')
+sleep_quality_ctrl = ctrl.Consequent(np.arange(0, 10.1, 0.1), 'sleep_quality')
 
 # Automatically populate membership functions for antecedents
 rhythm_ctrl.automf(5)
@@ -30,11 +30,14 @@ duration_ctrl.automf(5)
 environment_ctrl.automf(5)
 
 # Define custom membership functions for the consequent (sleep quality)
-sleep_quality_ctrl['poor'] = fuzz.trimf(sleep_quality_ctrl.universe, [0, 0, 2.5])
-sleep_quality_ctrl['mediocre'] = fuzz.trimf(sleep_quality_ctrl.universe, [0, 2.5, 5])
-sleep_quality_ctrl['average'] = fuzz.trimf(sleep_quality_ctrl.universe, [2.5, 5, 7.5])
-sleep_quality_ctrl['decent'] = fuzz.trimf(sleep_quality_ctrl.universe, [5, 7.5, 10])
-sleep_quality_ctrl['good'] = fuzz.trimf(sleep_quality_ctrl.universe, [7.5, 10, 10])
+# Adjusted membership functions for sleep quality
+sleep_quality_ctrl['poor'] = fuzz.trapmf(sleep_quality_ctrl.universe, [0, 0, 0.5, 2])
+sleep_quality_ctrl['mediocre'] = fuzz.trimf(sleep_quality_ctrl.universe, [1.5, 3, 4.5])
+sleep_quality_ctrl['average'] = fuzz.trimf(sleep_quality_ctrl.universe, [3.5, 5, 6.5])
+sleep_quality_ctrl['decent'] = fuzz.trimf(sleep_quality_ctrl.universe, [6, 7.5, 9])
+sleep_quality_ctrl['good'] = fuzz.trapmf(sleep_quality_ctrl.universe, [8.5, 9.5, 10, 10])
+
+
 
 # Define fuzzy rules
 # Rules for poor sleep quality
@@ -67,11 +70,14 @@ rule17 = ctrl.Rule(duration_ctrl['good'] & environment_ctrl['good'], sleep_quali
 # Additional rules for beneficial combinations
 rule18 = ctrl.Rule(stress_ctrl['decent'] & rhythm_ctrl['good'], sleep_quality_ctrl['good'])
 rule19 = ctrl.Rule(duration_ctrl['good'] | (rhythm_ctrl['good'] & environment_ctrl['good']), sleep_quality_ctrl['good'])
+rule_max = ctrl.Rule(rhythm_ctrl['good'] & stress_ctrl['good'] & duration_ctrl['good'] & environment_ctrl['good'], sleep_quality_ctrl['good'])
+rule_min = ctrl.Rule(rhythm_ctrl['poor'] & stress_ctrl['poor'] & duration_ctrl['poor'] & environment_ctrl['poor'], sleep_quality_ctrl['poor'])
 
 # Create a control system and simulation
 sleep_quality_control_system = ctrl.ControlSystem([
     rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10,
-    rule11, rule12, rule13, rule14, rule15, rule16, rule17, rule18, rule19
+    rule11, rule12, rule13, rule14, rule15, rule16, rule17, rule18, rule19,
+    rule_max, rule_min
 ])
 sleep_quality_simulation = ctrl.ControlSystemSimulation(sleep_quality_control_system)
 
@@ -99,7 +105,6 @@ def compute_sleep_quality(rhythm, stress, duration, environment):
 # API endpoint to receive data and compute sleep quality
 @app.post("/compute_sleep_quality/")
 async def compute(input_data: InputData):
-    print(f"Received input data: {input_data.dict()}")
     result = compute_sleep_quality(
         input_data.rhythm, input_data.stress, input_data.duration, input_data.environment
     )
